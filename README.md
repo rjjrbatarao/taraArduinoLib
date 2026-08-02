@@ -6,7 +6,7 @@ Basic and easy setup.
 
 Coin slot-----------> Allan 1222 -----------> ESP32 </br>
 
-### Basic Setup
+### Basic Wiring
 ```
 Coin slot - Allan 1222 
 white     - com 
@@ -19,6 +19,7 @@ Allan 1222 - ESP32
 no         - 23 
 com        - gnd 
 ```
+
 ### Arduino ESP32 V3.3.3
 ```c++
 #include "TaraLib.h"
