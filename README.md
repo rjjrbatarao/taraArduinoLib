@@ -43,6 +43,7 @@ void loop() {
   cash_terminal.taraService();
 }
 ```
+### Requirements
 
 <img width="768" height="432" alt="image" src="https://github.com/user-attachments/assets/6a2fbffd-c927-4593-9004-f92d237e6444" /></br>
 
