@@ -19,6 +19,30 @@ Allan 1222 - ESP32
 no         - 23 
 com        - gnd 
 ```
+### Arduino ESP32 V3.3.3
+```c++
+#include "TaraLib.h"
+
+#define PIN_COIN 23
+#define PIN_RELAY 17
+#define PIN_CHARGER 25
+#define CHARGE_STOP 99
+#define CHARGE_START 85
+#define RELAY_LOGIC LOW
+#define CHARGE_LOGIC LOW
+
+TaraLib cash_terminal(PIN_COIN, PIN_RELAY, PIN_CHARGER, CHARGE_STOP, CHARGE_START, RELAY_LOGIC, CHARGE_LOGIC);
+
+void setup() {
+  // put your setup code here, to run once:
+  cash_terminal.taraBegin("ESP32Cash Terminal");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  cash_terminal.taraService();
+}
+```
 
 <img width="768" height="432" alt="image" src="https://github.com/user-attachments/assets/6a2fbffd-c927-4593-9004-f92d237e6444" /></br>
 
