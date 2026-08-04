@@ -20,11 +20,15 @@ public:
 
   void onConnect(BLEServer *pServer) override {
     _lib->_deviceConnected = true;
+    digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? HIGH : LOW);
+    digitalWrite(_lib->_pinLed, HIGH);
     // Serial.println("[ESP32] Android App Connected!");
   }
 
   void onDisconnect(BLEServer *pServer) override {
     _lib->_deviceConnected = false;
+    digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? LOW : HIGH);
+    digitalWrite(_lib->_pinLed, LOW);
     // Serial.println("[ESP32] Android App Disconnected!");
   }
 };
@@ -82,7 +86,7 @@ public:
         /**
           TODO: toggle gpio 2 here built in led from esp32 on or off
         */
-        
+
         // Serial.println("[ESP32] Action: Ping received!");
       }
     }
@@ -91,10 +95,11 @@ public:
 
 // ==================== LIBRARY IMPLEMENTATION ====================
 
-TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge) {
+TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t pinLed, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge) {
   _pinCoin = pinCoin;
   _pinRelay = pinRelay;
   _pinCharge = pinCharge;
+  _pinLed = pinLed;
   _chargeStop = chargeStop;
   _chargeStart = chargeStart;
   _logicRelay = logicRelay;
@@ -108,6 +113,7 @@ void TaraLib::taraBegin(String bleName) {
   pinMode(_pinCoin, INPUT_PULLUP);
   pinMode(_pinRelay, OUTPUT);
   pinMode(_pinCharge, OUTPUT);
+  pinMode(_pinLed, OUTPUT);
   digitalWrite(_pinRelay, _logicRelay ? LOW : HIGH);
   digitalWrite(_pinCharge, _logicCharge ? LOW : HIGH);
 
@@ -186,5 +192,16 @@ void TaraLib::taraService() {
   // Handle new connection state transition
   if (_deviceConnected && !_oldDeviceConnected) {
     _oldDeviceConnected = _deviceConnected;
+  }
+
+  if (_deviceConnected == true) {
+    digitalWrite(_pinLed, HIGH);
+  } else {
+    static unsigned long lastBlink = 0;
+    static bool blinkState = LOW;
+    if (millis() - lastBlink > 500) {
+      lastBlink = millis();
+      digitalWrite(_pinLed, !blinkState);
+    }
   }
 }

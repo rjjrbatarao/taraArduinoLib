@@ -25,12 +25,13 @@
 #define PIN_COIN 23
 #define PIN_RELAY 17
 #define PIN_CHARGER 25
+#define PIN_LED 02
 #define CHARGE_STOP 99
 #define CHARGE_START 85
-#define RELAY_LOGIC LOW
+#define RELAY_LOGIC HIGH
 #define CHARGE_LOGIC LOW
 
-TaraLib cash_terminal(PIN_COIN, PIN_RELAY, PIN_CHARGER, CHARGE_STOP, CHARGE_START, RELAY_LOGIC, CHARGE_LOGIC);
+TaraLib cash_terminal(PIN_COIN, PIN_RELAY, PIN_CHARGER, PIN_LED, CHARGE_STOP, CHARGE_START, RELAY_LOGIC, CHARGE_LOGIC);
 
 void setup() {
   // put your setup code here, to run once:

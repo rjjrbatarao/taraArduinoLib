@@ -39,10 +39,12 @@ private:
   uint8_t _pinCoin;
   uint8_t _pinRelay;
   uint8_t _pinCharge;
+  uint8_t _pinLed;
   uint8_t _chargeStop;
   uint8_t _chargeStart;
   bool _logicRelay;
   bool _logicCharge;
+
 
   bool _deviceConnected = false;
   bool _oldDeviceConnected = false;
@@ -53,7 +55,7 @@ private:
   BLECharacteristic* _pTxCharacteristic = nullptr;
 
 public:
-  TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge);
+  TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t pinLed, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge);
   ~TaraLib();
 
   void taraBegin(String bleName);
