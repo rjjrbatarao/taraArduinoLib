@@ -3,7 +3,8 @@
 #define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  // App Writes -> ESP32 Receives
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  // ESP32 Sends -> App Receives
-
+#define HEARTBEAT_INTERVAL 10000
+#define MAX_PAYLOAD_SIZE 64  // in reality its only 61 max bytes
 // Forward declaration of class if not already in header
 class TaraLib;
 
@@ -21,14 +22,14 @@ public:
   void onConnect(BLEServer *pServer) override {
     _lib->_deviceConnected = true;
     digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? HIGH : LOW);
-    digitalWrite(_lib->_pinLed, HIGH);
+    digitalWrite(_lib->_pinLed, _lib->_logicLed ? HIGH : LOW);
     // Serial.println("[ESP32] Android App Connected!");
   }
 
   void onDisconnect(BLEServer *pServer) override {
     _lib->_deviceConnected = false;
     digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? LOW : HIGH);
-    digitalWrite(_lib->_pinLed, LOW);
+    digitalWrite(_lib->_pinLed, _lib->_logicLed ? LOW : HIGH);
     // Serial.println("[ESP32] Android App Disconnected!");
   }
 };
@@ -48,10 +49,10 @@ public:
     if (rxValue.length() > 0) {
       if (rxValue.startsWith("INFO:")) {
         rxValue.replace("INFO:", "");
-        String parts[4];
+        String parts[5];
 
         // Loop to split the string by commas
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
           int commaIndex = rxValue.indexOf(',');
           if (commaIndex != -1) {
             parts[i] = rxValue.substring(0, commaIndex);
@@ -60,7 +61,10 @@ public:
             parts[i] = rxValue;
           }
         }
-
+        Serial.println(parts[1].toInt());
+        Serial.println(_lib->_chargeStart);
+        Serial.println(parts[3]);  // charging state in android memory
+        Serial.println(parts[4]);  // tells where the webview is if its on lockscreen: locked or menu: unlocked
         // Action based on parsed data
         if (parts[1].toInt() <= _lib->_chargeStart || parts[3].equals("START_CHARGING")) {
           digitalWrite(_lib->_pinCharge, _lib->_logicCharge ? HIGH : LOW);
@@ -95,15 +99,18 @@ public:
 
 // ==================== LIBRARY IMPLEMENTATION ====================
 
-TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t pinLed, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge) {
+TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t pinLed, uint8_t pinBuzzer, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge, bool logicLed, bool logicBuzzer) {
   _pinCoin = pinCoin;
   _pinRelay = pinRelay;
   _pinCharge = pinCharge;
   _pinLed = pinLed;
+  _pinBuzzer = pinBuzzer;
   _chargeStop = chargeStop;
   _chargeStart = chargeStart;
   _logicRelay = logicRelay;
   _logicCharge = logicCharge;
+  _logicLed = logicLed;
+  _logicBuzzer = logicBuzzer;
 }
 
 TaraLib::~TaraLib() {
@@ -113,13 +120,14 @@ void TaraLib::taraBegin(String bleName) {
   pinMode(_pinCoin, INPUT_PULLUP);
   pinMode(_pinRelay, OUTPUT);
   pinMode(_pinCharge, OUTPUT);
-  pinMode(_pinLed, OUTPUT);
+  pinMode(_pinLed, _logicLed ? LOW : HIGH);
   digitalWrite(_pinRelay, _logicRelay ? LOW : HIGH);
   digitalWrite(_pinCharge, _logicCharge ? LOW : HIGH);
+  digitalWrite(_pinBuzzer, _logicBuzzer ? LOW : HIGH);
 
   // 1. Initialize BLE Device
   BLEDevice::init(bleName.c_str());
-
+  BLEDevice::setMTU(MAX_PAYLOAD_SIZE);
   // 2. Create the BLE Server & set connection callbacks
   _pServer = BLEDevice::createServer();
   _pServer->setCallbacks(new MyServerCallbacks(this));  // Pass instance pointer
@@ -154,6 +162,18 @@ void TaraLib::taraBegin(String bleName) {
   BLEDevice::startAdvertising();
 }
 
+/**
+* Blindly send any string data
+*/
+void TaraLib::taraSend(String data) {
+  if ((data.length() - 3) <= MAX_PAYLOAD_SIZE) {
+    _pTxCharacteristic->setValue(data.c_str());
+    _pTxCharacteristic->notify();
+  } else {
+    // length too long
+  }
+}
+
 void TaraLib::taraService() {
   if (digitalRead(_pinCoin) == LOW) {
     if (!_bleCmdSendFlag) {
@@ -174,12 +194,13 @@ void TaraLib::taraService() {
   // Send periodic heartbeat when connected
   if (_deviceConnected) {
     static unsigned long lastSendTime = 0;
-    if (millis() - lastSendTime > 5000) {
+    if (millis() - lastSendTime > HEARTBEAT_INTERVAL) {
       lastSendTime = millis();
       String payload = "ESP32_OK:" + String(millis() / 1000) + "s";
       _pTxCharacteristic->setValue(payload.c_str());
       _pTxCharacteristic->notify();
     }
+  } else {
   }
 
   // Handle re-advertising on disconnect
@@ -192,16 +213,5 @@ void TaraLib::taraService() {
   // Handle new connection state transition
   if (_deviceConnected && !_oldDeviceConnected) {
     _oldDeviceConnected = _deviceConnected;
-  }
-
-  if (_deviceConnected == true) {
-    digitalWrite(_pinLed, HIGH);
-  } else {
-    static unsigned long lastBlink = 0;
-    static bool blinkState = LOW;
-    if (millis() - lastBlink > 500) {
-      lastBlink = millis();
-      digitalWrite(_pinLed, !blinkState);
-    }
   }
 }
