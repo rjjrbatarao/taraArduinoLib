@@ -45,10 +45,4 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   cash_terminal.taraService();
-  if(Serial.available() > 0){
-    char c = Serial.read();
-    if(c == 's'){
-      cash_terminal.taraSend("DATA:{\"hello\":\"world test\"}");
-    }
-  }
 }

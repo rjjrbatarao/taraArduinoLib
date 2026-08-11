@@ -71,8 +71,7 @@ public:
           if (!_lib->_bleChrgSendFlag) {
             _lib->_bleChrgSendFlag = true;
             String payload = "START_CHARGING";
-            _lib->_pTxCharacteristic->setValue(payload.c_str());
-            _lib->_pTxCharacteristic->notify();
+            _lib->taraSend(payload);
           }
         }
 
@@ -81,9 +80,12 @@ public:
           if (_lib->_bleChrgSendFlag) {
             _lib->_bleChrgSendFlag = false;
             String payload = "STOP_CHARGING";
-            _lib->_pTxCharacteristic->setValue(payload.c_str());
-            _lib->_pTxCharacteristic->notify();
+            _lib->taraSend(payload);
           }
+        }
+
+        if (parts[3].equals("CLEAR_COIN")) {
+          _lib->setCoin(0);
         }
 
       } else if (rxValue == "PING_FROM_APP") {
@@ -117,6 +119,7 @@ TaraLib::~TaraLib() {
 }
 
 void TaraLib::taraBegin(String bleName) {
+
   pinMode(_pinCoin, INPUT_PULLUP);
   pinMode(_pinRelay, OUTPUT);
   pinMode(_pinCharge, OUTPUT);
@@ -124,6 +127,7 @@ void TaraLib::taraBegin(String bleName) {
   digitalWrite(_pinRelay, _logicRelay ? LOW : HIGH);
   digitalWrite(_pinCharge, _logicCharge ? LOW : HIGH);
   digitalWrite(_pinBuzzer, _logicBuzzer ? LOW : HIGH);
+
 
   // 1. Initialize BLE Device
   BLEDevice::init(bleName.c_str());
@@ -160,6 +164,16 @@ void TaraLib::taraBegin(String bleName) {
   pAdvertising->setMinPreferred(0x12);
 
   BLEDevice::startAdvertising();
+
+
+#ifdef ESP32_COINSLOT
+  attachInterrupt(
+    digitalPinToInterrupt(_pinCoin),
+    [this]() {
+      this->handleInterrupt();
+    },
+    FALLING);
+#endif
 }
 
 /**
@@ -175,21 +189,21 @@ void TaraLib::taraSend(String data) {
 }
 
 void TaraLib::taraService() {
+#ifdef ESP32_1222_COINSLOT
   if (digitalRead(_pinCoin) == LOW) {
     if (!_bleCmdSendFlag) {
       _bleCmdSendFlag = true;
       String payload = "HIDE_LOCKSCREEN";
-      _pTxCharacteristic->setValue(payload.c_str());
-      _pTxCharacteristic->notify();
+      taraSend(payload);
     }
   } else {
     if (_bleCmdSendFlag) {
       _bleCmdSendFlag = false;
       String payload = "SHOW_LOCKSCREEN";
-      _pTxCharacteristic->setValue(payload.c_str());
-      _pTxCharacteristic->notify();
+      taraSend(payload);
     }
   }
+#endif
 
   // Send periodic heartbeat when connected
   if (_deviceConnected) {
@@ -197,8 +211,7 @@ void TaraLib::taraService() {
     if (millis() - lastSendTime > HEARTBEAT_INTERVAL) {
       lastSendTime = millis();
       String payload = "ESP32_OK:" + String(millis() / 1000) + "s";
-      _pTxCharacteristic->setValue(payload.c_str());
-      _pTxCharacteristic->notify();
+      taraSend(payload);
     }
   } else {
   }
@@ -214,4 +227,35 @@ void TaraLib::taraService() {
   if (_deviceConnected && !_oldDeviceConnected) {
     _oldDeviceConnected = _deviceConnected;
   }
+#ifdef ESP32_COINSLOT
+  static unsigned long previousTime = 0;
+  if (_coinCount != _prevCount) {
+    _prevCount = _coinCount;
+    if ((millis() - previousTime) > 200) {
+      _coinDenomination = 0;
+    }
+    previousTime = millis();
+    _coinDenomination = _coinCount;
+    /**
+      Send to bluetooth
+    */
+    String payload = "DATA:" + String(_coinCount) + "," + String(_coinDenomination);
+    taraSend(payload);
+  }
+#endif
 }
+
+#ifdef ESP32_COINSLOT
+uint32_t TaraLib::getCoin() {
+  return _coinCount;
+}
+
+uint32_t TaraLib::getDenomination() {
+  return _coinDenomination;
+}
+
+void TaraLib::setCoin(uint32_t coin) {
+  _coinDenomination = coin;
+  _coinCount = coin;
+}
+#endif

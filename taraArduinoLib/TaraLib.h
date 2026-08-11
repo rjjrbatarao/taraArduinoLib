@@ -24,6 +24,8 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <FunctionalInterrupt.h>  // Required header
+#include "config.h"
 
 // 1. Forward declaration of callback classes
 class MyServerCallbacks;
@@ -53,15 +55,38 @@ private:
   bool _bleCmdSendFlag = false;
   bool _bleChrgSendFlag = false;
 
+
   BLEServer* _pServer = nullptr;
   BLECharacteristic* _pTxCharacteristic = nullptr;
+  void taraSend(String data);
+
+#ifdef ESP32_COINSLOT
+
+  uint32_t _prevCount = 0;
+  uint32_t _coinDenomination = 0;
+  volatile uint32_t _lastDebounceTime;
+  const uint32_t _debounceDelay = COIN_DEBOUNCE;
+  volatile uint32_t _coinCount = 0;
+
+  void ARDUINO_ISR_ATTR handleInterrupt() {
+    if ((millis() - _lastDebounceTime) > _debounceDelay) {
+      _coinCount++;
+      _lastDebounceTime = millis();
+    }
+  }
+
+  uint32_t getCoin();
+  uint32_t getDenomination();
+  void setCoin(uint32_t coin);
+
+#endif
 
 public:
   TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t pinLed, uint8_t pinBuzzer, uint8_t chargeStop, uint8_t chargeStart, bool logicRelay, bool logicCharge, bool logicLed, bool logicBuzzer);
   ~TaraLib();
 
+
   void taraBegin(String bleName);
-  void taraSend(String data);
   void taraService();
 };
 
