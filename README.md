@@ -2,11 +2,16 @@
 Arduino library for ESP based Bluetooth Cash Terminals.
 Basic and easy setup.
 
+## Current Feature
+- Auto Reconnection
+- Brownout Recovery
+- Standalone or Hybrid A1222
+
 ## Connection Hybrid:
 
 Coin slot-----------> Allan 1222 -----------> ESP32 </br>
 
-### Wiring Hybrid
+### Wiring Hybrid A1222
 ```
 Coin slot - Allan 1222 
 white     - com 
