@@ -3,9 +3,9 @@ Arduino library for ESP based Bluetooth Cash Terminals.
 Basic and easy setup.
 
 ## Current Feature
-- Auto Reconnection
-- Brownout Recovery
-- Standalone or Hybrid A1222
+- [x] Auto Reconnection
+- [x] Brownout Recovery
+- [x] Standalone or Hybrid A1222
 
 ## Connection Hybrid:
 
