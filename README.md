@@ -1,5 +1,5 @@
 # taraArduinoLib
-Arduino library for ESP based Bluetooth Cash Terminals.
+Arduino library for ESP based Bluetooth Cash Terminals, for TaraKiosk
 Basic and easy setup.
 
 ## Current Feature
