@@ -2,11 +2,11 @@
 Arduino library for ESP based Bluetooth Cash Terminals.
 Basic and easy setup.
 
-## Connection:
+## Connection Hybrid:
 
 Coin slot-----------> Allan 1222 -----------> ESP32 </br>
 
-### Basic Wiring
+### Wiring Hybrid
 ```
 Coin slot - Allan 1222 
 white     - com 
@@ -18,6 +18,18 @@ red       - 12v
 Allan 1222 - ESP32 
 no         - 23 
 com        - gnd 
+```
+
+## Connection Standalone:
+
+Coin slot-----------> ESP32 </br>
+
+### Wiring Standalone
+```
+Coin slot - ESP32 
+white     - 23
+black     - gnd 
+red       - 12V
 ```
 
 ### Arduino ESP32 V3.3.3
