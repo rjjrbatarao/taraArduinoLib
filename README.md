@@ -1,6 +1,3 @@
-![ESP32](https://shields.io)
-![Arduino](https://shields.io)
-
 # taraArduinoLib
 Arduino library for ESP based Bluetooth Cash Terminals, for TaraKiosk
 Basic and easy setup.
