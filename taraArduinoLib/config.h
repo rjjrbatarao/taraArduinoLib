@@ -64,7 +64,7 @@
     #define HAS_DUAL_BAND_WIFI   1
 #endif
 
-#define COIN_DEBOUNCE 100
+#define COIN_DEBOUNCE 50
 
 //#define ESP32_1222_COINSLOT
 #define ESP32_COINSLOT   //<--------------- STAND ALONE

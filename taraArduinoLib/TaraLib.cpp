@@ -83,11 +83,11 @@ public:
             _lib->taraSend(payload);
           }
         }
-
+#ifdef ESP32_COINSLOT
         if (parts[3].equals("CLEAR_COIN")) {
           _lib->setCoin(0);
         }
-
+#endif
       } else if (rxValue == "PING_FROM_APP") {
         /**
           TODO: toggle gpio 2 here built in led from esp32 on or off
@@ -228,20 +228,26 @@ void TaraLib::taraService() {
     _oldDeviceConnected = _deviceConnected;
   }
 #ifdef ESP32_COINSLOT
-  static unsigned long previousTime = 0;
-  if (_coinCount != _prevCount) {
-    _prevCount = _coinCount;
-    if ((millis() - previousTime) > 200) {
-      _coinDenomination = 0;
+  if (_coinCounting) {
+    unsigned long curr_t = millis();
+    if ((curr_t - _lastDebounceTime) < 250)  // low 20ms, med 50ms, high 100ms
+    {
+      return;
     }
-    previousTime = millis();
-    _coinDenomination = _coinCount;
-    /**
+    _coinCounting = false;
+
+    if (_coinCount > 0) {
+      /**
       Send to bluetooth
     */
-    String payload = "DATA:" + String(_coinCount) + "," + String(_coinDenomination);
-    taraSend(payload);
+      String payload = "DATA:" + String(_coinCount);
+      taraSend(payload);
+    }
   }
+  noInterrupts();
+  _coinCount = 0;
+  _coinCounting = true;
+  interrupts();
 #endif
 }
 
@@ -250,12 +256,7 @@ uint32_t TaraLib::getCoin() {
   return _coinCount;
 }
 
-uint32_t TaraLib::getDenomination() {
-  return _coinDenomination;
-}
-
 void TaraLib::setCoin(uint32_t coin) {
-  _coinDenomination = coin;
   _coinCount = coin;
 }
 #endif

@@ -62,11 +62,11 @@ private:
 
 #ifdef ESP32_COINSLOT
 
-  uint32_t _prevCount = 0;
-  uint32_t _coinDenomination = 0;
-  volatile uint32_t _lastDebounceTime;
+
   const uint32_t _debounceDelay = COIN_DEBOUNCE;
   volatile uint32_t _coinCount = 0;
+  volatile unsigned long _lastDebounceTime;
+  bool _coinCounting = true;
 
   void ARDUINO_ISR_ATTR handleInterrupt() {
     if ((millis() - _lastDebounceTime) > _debounceDelay) {
@@ -76,7 +76,6 @@ private:
   }
 
   uint32_t getCoin();
-  uint32_t getDenomination();
   void setCoin(uint32_t coin);
 
 #endif

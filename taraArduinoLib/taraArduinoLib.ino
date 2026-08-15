@@ -27,8 +27,8 @@
 #define PIN_CHARGER 25
 #define PIN_LED 02
 #define PIN_BUZZER 24
-#define CHARGE_STOP 90
-#define CHARGE_START 85
+#define CHARGE_STOP 99
+#define CHARGE_START 80
 #define RELAY_LOGIC HIGH
 #define CHARGE_LOGIC LOW
 #define LED_LOGIC LOW
