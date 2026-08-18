@@ -21,14 +21,18 @@ public:
 
   void onConnect(BLEServer *pServer) override {
     _lib->_deviceConnected = true;
+#ifdef ESP32_1222_COINSLOT
     digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? HIGH : LOW);
+#endif
     digitalWrite(_lib->_pinLed, _lib->_logicLed ? HIGH : LOW);
     // Serial.println("[ESP32] Android App Connected!");
   }
 
   void onDisconnect(BLEServer *pServer) override {
     _lib->_deviceConnected = false;
+#ifdef ESP32_1222_COINSLOT
     digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? LOW : HIGH);
+#endif
     digitalWrite(_lib->_pinLed, _lib->_logicLed ? LOW : HIGH);
     // Serial.println("[ESP32] Android App Disconnected!");
   }
@@ -60,11 +64,14 @@ public:
           } else {
             parts[i] = rxValue;
           }
+#ifdef DEBUG_ENABLE
+          Serial.println(parts[i]);
+#endif
         }
-        Serial.println(parts[1].toInt());
-        Serial.println(_lib->_chargeStart);
-        Serial.println(parts[3]);  // charging state in android memory
-        Serial.println(parts[4]);  // tells where the webview is if its on lockscreen: locked or menu: unlocked
+        //Serial.println(parts[1].toInt());
+        //Serial.println(_lib->_chargeStart);
+        //Serial.println(parts[3]);  // charging state in android memory
+        //Serial.println(parts[4]);  // tells where the webview is if its on lockscreen: locked or menu: unlocked
         // Action based on parsed data
         if (parts[1].toInt() <= _lib->_chargeStart || parts[3].equals("START_CHARGING")) {
           digitalWrite(_lib->_pinCharge, _lib->_logicCharge ? HIGH : LOW);
@@ -88,12 +95,24 @@ public:
           _lib->setCoin(0);
         }
 #endif
-      } else if (rxValue == "PING_FROM_APP") {
+      } else if (rxValue.startsWith("DATA:")) {
+#ifdef ESP32_COINSLOT
         /**
           TODO: toggle gpio 2 here built in led from esp32 on or off
         */
-
-        // Serial.println("[ESP32] Action: Ping received!");
+        rxValue.replace("DATA:", "");
+        //#ifdef DEBUG_ENABLE
+        //Serial.println(rxValue);
+        if (rxValue.equals("ON")) {
+          digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? HIGH : LOW);
+          _lib->_isRelayOn = true;
+        } else if (rxValue.equals("OFF")) {
+          digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? LOW : HIGH);
+          _lib->_isRelayOn = false;
+        }
+//#endif
+// Serial.println("[ESP32] Action: Ping received!");
+#endif
       }
     }
   }
@@ -113,6 +132,7 @@ TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t p
   _logicCharge = logicCharge;
   _logicLed = logicLed;
   _logicBuzzer = logicBuzzer;
+  _isRelayOn = false;
 }
 
 TaraLib::~TaraLib() {
@@ -124,7 +144,12 @@ void TaraLib::taraBegin(String bleName) {
   pinMode(_pinRelay, OUTPUT);
   pinMode(_pinCharge, OUTPUT);
   pinMode(_pinLed, _logicLed ? LOW : HIGH);
+#ifdef ESP32_COINSLOT
   digitalWrite(_pinRelay, _logicRelay ? LOW : HIGH);
+#endif
+#ifdef ESP32_1222_COINSLOT
+  digitalWrite(_pinRelay, _logicRelay ? HIGH : LOW);
+#endif
   digitalWrite(_pinCharge, _logicCharge ? LOW : HIGH);
   digitalWrite(_pinBuzzer, _logicBuzzer ? LOW : HIGH);
 
@@ -206,15 +231,14 @@ void TaraLib::taraService() {
 #endif
 
   // Send periodic heartbeat when connected
-  if (_deviceConnected) {
+  if (_deviceConnected == true && _isRelayOn == false) {
     static unsigned long lastSendTime = 0;
     if (millis() - lastSendTime > HEARTBEAT_INTERVAL) {
       lastSendTime = millis();
       String payload = "ESP32_OK:" + String(millis() / 1000) + "s";
       taraSend(payload);
     }
-  } else {
-  }
+  } 
 
   // Handle re-advertising on disconnect
   if (!_deviceConnected && _oldDeviceConnected) {

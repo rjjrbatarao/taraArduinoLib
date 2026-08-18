@@ -49,6 +49,7 @@ private:
   bool _logicCharge;
   bool _logicLed;
   bool _logicBuzzer;
+  bool _isRelayOn;
 
   bool _deviceConnected = false;
   bool _oldDeviceConnected = false;
@@ -63,13 +64,12 @@ private:
 #ifdef ESP32_COINSLOT
 
 
-  const uint32_t _debounceDelay = COIN_DEBOUNCE;
   volatile uint32_t _coinCount = 0;
   volatile unsigned long _lastDebounceTime;
   bool _coinCounting = true;
 
   void ARDUINO_ISR_ATTR handleInterrupt() {
-    if ((millis() - _lastDebounceTime) > _debounceDelay) {
+    if(_coinCounting){
       _coinCount++;
       _lastDebounceTime = millis();
     }
