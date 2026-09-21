@@ -64,11 +64,11 @@
     #define HAS_DUAL_BAND_WIFI   1
 #endif
 
-
+#define DEBOUNCE_COIN_DELAY 50
 //#define ESP32_1222_COINSLOT
 #define ESP32_COINSLOT   //<--------------- STAND ALONE
-
-
+//#define DEBUG_ENABLE
+#define MAX_PAYLOAD_LENGTH 64
 
 
 #endif // CHIP_CONFIG_H

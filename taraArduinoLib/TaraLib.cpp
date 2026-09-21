@@ -4,7 +4,9 @@
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  // App Writes -> ESP32 Receives
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  // ESP32 Sends -> App Receives
 #define HEARTBEAT_INTERVAL 10000
+#define ADVERTISE_INTERVAL 1000
 #define MAX_PAYLOAD_SIZE 64  // in reality its only 61 max bytes
+#define QUEUE_SIZE 5
 // Forward declaration of class if not already in header
 class TaraLib;
 
@@ -106,9 +108,11 @@ public:
         if (rxValue.equals("ON")) {
           digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? HIGH : LOW);
           _lib->_isRelayOn = true;
+  
         } else if (rxValue.equals("OFF")) {
           digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? LOW : HIGH);
           _lib->_isRelayOn = false;
+       
         }
 //#endif
 // Serial.println("[ESP32] Action: Ping received!");
@@ -133,6 +137,7 @@ TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t p
   _logicLed = logicLed;
   _logicBuzzer = logicBuzzer;
   _isRelayOn = false;
+
 }
 
 TaraLib::~TaraLib() {
@@ -238,13 +243,16 @@ void TaraLib::taraService() {
       String payload = "ESP32_OK:" + String(millis() / 1000) + "s";
       taraSend(payload);
     }
-  } 
+  }
 
   // Handle re-advertising on disconnect
   if (!_deviceConnected && _oldDeviceConnected) {
-    delay(500);
-    _pServer->startAdvertising();
-    _oldDeviceConnected = _deviceConnected;
+    static unsigned long lastAdvertiseTime = 0;
+    if (millis() - lastAdvertiseTime > ADVERTISE_INTERVAL) {
+      lastAdvertiseTime = millis();
+      _pServer->startAdvertising();
+      _oldDeviceConnected = _deviceConnected;
+    }
   }
 
   // Handle new connection state transition
@@ -263,9 +271,10 @@ void TaraLib::taraService() {
     if (_coinCount > 0) {
       /**
       Send to bluetooth
-    */
+      */
       String payload = "DATA:" + String(_coinCount);
       taraSend(payload);
+
     }
   }
   noInterrupts();
@@ -273,7 +282,10 @@ void TaraLib::taraService() {
   _coinCounting = true;
   interrupts();
 #endif
+
+  
 }
+
 
 #ifdef ESP32_COINSLOT
 uint32_t TaraLib::getCoin() {

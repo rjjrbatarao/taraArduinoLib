@@ -31,6 +31,10 @@
 class MyServerCallbacks;
 class MyCharacteristicCallbacks;
 
+struct Message {
+  char payload[MAX_PAYLOAD_LENGTH];
+};
+
 class TaraLib {
   // 2. Grant friend access to the callbacks
   friend class MyServerCallbacks;
@@ -56,7 +60,8 @@ private:
   bool _bleCmdSendFlag = false;
   bool _bleChrgSendFlag = false;
 
-
+  QueueHandle_t _msgQueue;
+  
   BLEServer* _pServer = nullptr;
   BLECharacteristic* _pTxCharacteristic = nullptr;
   void taraSend(String data);
@@ -66,12 +71,18 @@ private:
 
   volatile uint32_t _coinCount = 0;
   volatile unsigned long _lastDebounceTime;
+  volatile unsigned long _lastPulseTime = 0;
+  portMUX_TYPE _synch = portMUX_INITIALIZER_UNLOCKED;
   bool _coinCounting = true;
 
-  void ARDUINO_ISR_ATTR handleInterrupt() {
-    if(_coinCounting){
+  void IRAM_ATTR handleInterrupt() {
+    unsigned long _currentTime = millis();
+    if(_coinCounting && (_currentTime - _lastPulseTime > DEBOUNCE_COIN_DELAY)){
+      portENTER_CRITICAL(&_synch);
+      _lastPulseTime = _currentTime;
       _coinCount++;
       _lastDebounceTime = millis();
+      portEXIT_CRITICAL(&_synch);
     }
   }
 
