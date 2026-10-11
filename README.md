@@ -7,8 +7,12 @@ Basic and easy setup.
 - [x] Brownout Recovery
 - [x] Standalone or Hybrid A1222
 
-## Connection Hybrid:
+## Supported ESP chip
+- ESP32 Wroom
+- ESP32 C3
 
+  
+## Connection Hybrid:
 Coin slot-----------> Allan 1222 -----------> ESP32 </br>
 
 ### Wiring Hybrid A1222
