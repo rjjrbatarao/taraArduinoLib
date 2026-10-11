@@ -17,29 +17,30 @@
  * 
  * REQUIREMENTS:
  *  - Allan Coinslot + Allan 1222 + ESP32
+ *  - CB + ESP32
  */
 
 
 #include "TaraLib.h"
 
-#define PIN_COIN 23
-#define PIN_RELAY 17
-#define PIN_CHARGER 25
-#define PIN_LED 02
-#define PIN_BUZZER 24
-#define CHARGE_STOP 100
-#define CHARGE_START 80
-#define RELAY_LOGIC HIGH
-#define CHARGE_LOGIC LOW
-#define LED_LOGIC LOW
-#define BUZZER_LOGIC HIGH
-
-TaraLib cash_terminal(PIN_COIN, PIN_RELAY, PIN_CHARGER, PIN_LED, PIN_BUZZER, CHARGE_STOP, CHARGE_START, RELAY_LOGIC, CHARGE_LOGIC, LED_LOGIC, BUZZER_LOGIC);
+TaraLib cash_terminal(
+  PIN_COIN, 
+  PIN_RELAY, 
+  PIN_CHARGER, 
+  PIN_LED, 
+  PIN_BUZZER, 
+  CHARGE_STOP, 
+  CHARGE_START, 
+  RELAY_LOGIC, 
+  CHARGE_LOGIC, 
+  LED_LOGIC, 
+  BUZZER_LOGIC
+);
 
 void setup() {
   Serial.begin(115200);
   // put your setup code here, to run once:
-  cash_terminal.taraBegin("ESP32Cash Terminal");
+  cash_terminal.taraBegin("ESP32C3 Terminal");
 }
 
 void loop() {

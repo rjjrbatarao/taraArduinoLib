@@ -64,11 +64,65 @@
     #define HAS_DUAL_BAND_WIFI   1
 #endif
 
-#define DEBOUNCE_COIN_DELAY 50
+// ============================================================================
+// Optional Settings for tweaks
+// ============================================================================
+
+#define DEBOUNCE_COIN_DELAY 20
 //#define ESP32_1222_COINSLOT
 #define ESP32_COINSLOT   //<--------------- STAND ALONE
 //#define DEBUG_ENABLE
 #define MAX_PAYLOAD_LENGTH 64
+
+// ============================================================================
+// Core Settings for tweaks
+// ============================================================================
+
+#define CHARGE_STOP 100
+#define CHARGE_START 20
+#define RELAY_LOGIC HIGH
+#define CHARGE_LOGIC LOW
+#define LED_LOGIC LOW
+#define BUZZER_LOGIC HIGH
+
+// ============================================================================
+// Core Pin assignment based on CHIP
+// ============================================================================
+
+#if defined(CONFIG_IDF_TARGET_ESP32)
+  #define LCD_SDA 99
+  #define LCD_SCL 99
+  #define PIN_COIN 23
+  #define PIN_RELAY 17
+  #define PIN_CHARGER 25
+  #define PIN_LED 2
+  #define PIN_BUZZER 24
+
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+  #define LCD_SDA 4
+  #define LCD_SCL 3
+  #define PIN_COIN 0
+  #define PIN_RELAY 1
+  #define PIN_CHARGER 2
+  #define PIN_LED 8
+  #define PIN_BUZZER 9
+
+#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+  #error "Not implemented" 
+
+#elif defined(CONFIG_IDF_TARGET_ESP32C5)
+  #error "Not implemented" 
+
+#elif defined(CONFIG_IDF_TARGET_ESP32C6)
+  #error "Not implemented" 
+
+#elif defined(CONFIG_IDF_TARGET_ESP32P4)
+  #error "Not implemented" 
+
+#else
+  #error "Unsupported target or unconfigured ESP32 core family."  
+#endif
+
 
 
 #endif // CHIP_CONFIG_H

@@ -61,7 +61,7 @@ private:
   bool _bleChrgSendFlag = false;
 
   QueueHandle_t _msgQueue;
-  
+
   BLEServer* _pServer = nullptr;
   BLECharacteristic* _pTxCharacteristic = nullptr;
   void taraSend(String data);
@@ -80,8 +80,8 @@ private:
     if(_coinCounting && (_currentTime - _lastPulseTime > DEBOUNCE_COIN_DELAY)){
       portENTER_CRITICAL(&_synch);
       _lastPulseTime = _currentTime;
+      _lastDebounceTime = _currentTime;
       _coinCount++;
-      _lastDebounceTime = millis();
       portEXIT_CRITICAL(&_synch);
     }
   }

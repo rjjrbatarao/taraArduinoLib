@@ -108,11 +108,10 @@ public:
         if (rxValue.equals("ON")) {
           digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? HIGH : LOW);
           _lib->_isRelayOn = true;
-  
+
         } else if (rxValue.equals("OFF")) {
           digitalWrite(_lib->_pinRelay, _lib->_logicRelay ? LOW : HIGH);
           _lib->_isRelayOn = false;
-       
         }
 //#endif
 // Serial.println("[ESP32] Action: Ping received!");
@@ -137,7 +136,6 @@ TaraLib::TaraLib(uint8_t pinCoin, uint8_t pinRelay, uint8_t pinCharge, uint8_t p
   _logicLed = logicLed;
   _logicBuzzer = logicBuzzer;
   _isRelayOn = false;
-
 }
 
 TaraLib::~TaraLib() {
@@ -145,7 +143,7 @@ TaraLib::~TaraLib() {
 
 void TaraLib::taraBegin(String bleName) {
 
-  pinMode(_pinCoin, INPUT_PULLUP);
+  pinMode(_pinCoin, OUTPUT);
   pinMode(_pinRelay, OUTPUT);
   pinMode(_pinCharge, OUTPUT);
   pinMode(_pinLed, _logicLed ? LOW : HIGH);
@@ -157,8 +155,8 @@ void TaraLib::taraBegin(String bleName) {
 #endif
   digitalWrite(_pinCharge, _logicCharge ? LOW : HIGH);
   digitalWrite(_pinBuzzer, _logicBuzzer ? LOW : HIGH);
-
-
+  digitalWrite(_pinCoin, HIGH);
+  pinMode(_pinCoin, INPUT_PULLUP);
   // 1. Initialize BLE Device
   BLEDevice::init(bleName.c_str());
   BLEDevice::setMTU(MAX_PAYLOAD_SIZE);
@@ -202,7 +200,7 @@ void TaraLib::taraBegin(String bleName) {
     [this]() {
       this->handleInterrupt();
     },
-    FALLING);
+    CHANGE);
 #endif
 }
 
@@ -272,9 +270,9 @@ void TaraLib::taraService() {
       /**
       Send to bluetooth
       */
-      String payload = "DATA:" + String(_coinCount);
+      unsigned long _credit = _coinCount;
+      String payload = "DATA:" + String(_credit);
       taraSend(payload);
-
     }
   }
   noInterrupts();
@@ -282,14 +280,12 @@ void TaraLib::taraService() {
   _coinCounting = true;
   interrupts();
 #endif
-
-  
 }
 
 
 #ifdef ESP32_COINSLOT
 uint32_t TaraLib::getCoin() {
-  return _coinCount;
+  return _coinCount ;
 }
 
 void TaraLib::setCoin(uint32_t coin) {
