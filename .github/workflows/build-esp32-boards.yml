@@ -20,8 +20,6 @@ jobs:
         board:
           - name: "esp32-standard"
             fqbn: "esp32:esp32:esp32"
-          - name: "esp32-s3"
-            fqbn: "esp32:esp32:esp32s3"
           - name: "esp32-c3"
             fqbn: "esp32:esp32:esp32c3"
             
