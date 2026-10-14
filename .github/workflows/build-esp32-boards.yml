@@ -1,0 +1,51 @@
+name: Build ESP32 Firmware (Multi-Board)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        board:
+          - name: "esp32-standard"
+            fqbn: "esp32:esp32:esp32"
+          - name: "esp32-s3"
+            fqbn: "esp32:esp32:esp32s3"
+          - name: "esp32-c3"
+            fqbn: "esp32:esp32:esp32c3"
+            
+    steps:
+      # 1. Checkout the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup the Arduino CLI environment
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      # 3. Install the ESP32 platform core
+      - name: Install ESP32 Platform Core
+        run: |
+          arduino-cli core update-index --additional-urls https://github.io
+          arduino-cli core install esp32:esp32@3.3.3 --additional-urls https://github.io
+
+      # 4. Compile using the matrix variables
+      - name: Compile Sketch for ${{ matrix.board.name }}
+        run: |
+          arduino-cli compile --fqbn ${{ matrix.board.fqbn }} \
+            --output-dir ./build/${{ matrix.board.name }} \
+            ./taraArduinoLib/taraArduinoLib.ino
+
+      # 5. Save the unique binary for this board configuration
+      - name: Upload Firmware Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.board.name }}
+          path: ./build/${{ matrix.board.name }}/
